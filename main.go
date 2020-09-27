@@ -188,13 +188,10 @@ func processAlarm(alarmTimeUnix int64) {
 	lastAlarmUnix = alarmTimeUnix
 }
 
-
 func main() {
 	cfg := ParseConfig()
 
 	client := NewClient(cfg)
-
-	//test(client)
 
 	vals, err := client.Validators()
 	if err != nil {
@@ -209,7 +206,7 @@ func main() {
 
 	apiErrTry := 0
 	for {
-		if apiErrTry > 3 {
+		if apiErrTry > 5 {
 			fmt.Errorf("API failed 3 times, send alarm !!!")
 			processAlarm(time.Now().Unix())
 			apiErrTry = 0
@@ -229,33 +226,25 @@ func main() {
 				time.Sleep(5 * time.Second)
 				continue
 			}
-			fmt.Errorf("Height is not right, send alarm !!!")
+			fmt.Errorf("Height %v is not right, take time: %v seconds , send alarm !!!", height, elapse)
 			processAlarm(alarmTime.Unix())
 			continue
 		}
 		lastHeight = height
 		lastTime = time.Now()
 
-		block, err := client.Block(height)
+		vals, err := client.Validators()
 		if err != nil {
-			fmt.Errorf("failed to query block using rpc client: %s", err)
-			time.Sleep(1 * time.Second)
 			apiErrTry++
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
-		valSet, err := client.ValidatorSet(block.Block.LastCommit.Height)
-		if err != nil {
-			fmt.Errorf("failed to query validator set using rpc client: %s", err)
-			time.Sleep(1 * time.Second)
-			apiErrTry++
-			continue
-		}
-		fmt.Println(valSet.BlockHeight, len(valSet.Validators), validatorLen)
-
-		if len(valSet.Validators) < validatorLen {
-			fmt.Errorf("Validators is not enough, send alarm !!!")
-			processAlarm(time.Now().Unix())
+		for k, v := range vals {
+			if v.Status != 3 {
+				fmt.Errorf("Validators status !=3  block: %v, send alarm !!!", height)
+				processAlarm(time.Now().Unix())
+			}
 		}
 		apiErrTry = 0
 	}
