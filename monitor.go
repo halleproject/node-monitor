@@ -13,14 +13,20 @@ func (cli *Client) Monitor() {
 	apiErrTry := 0
 	for {
 		if apiErrTry > 5 {
-			fmt.Errorf("API failed 3 times, send alarm !!!")
-			//processAlarm(time.Now().Unix())
+			cli.Logger.Debug("query api failed, send alarm !!!", "try times", apiErrTry)
+
+			alarm := AlarmInfo{
+				AlarmType: Query,
+				Detail:    fmt.Sprintf("query failed, try times: %v", apiErrTry),
+				Time:      time.Now(),
+			}
+			cli.timerTicker.Data <- alarm
 			apiErrTry = 0
 		}
 
 		height, err := cli.LatestBlockHeight()
 		if err != nil {
-			fmt.Errorf("failed to query block height")
+			cli.Logger.Debug("faild to query block height")
 			apiErrTry++
 			time.Sleep(1 * time.Second)
 			continue
@@ -32,8 +38,14 @@ func (cli *Client) Monitor() {
 				time.Sleep(5 * time.Second)
 				continue
 			}
-			fmt.Errorf("Height %v is not right, take time: %v seconds , send alarm !!!", height, elapse)
-			//processAlarm(alarmTime.Unix())
+			cli.Logger.Debug(fmt.Sprintf("Block height %v is not increased, take time: %v seconds.", height, elapse))
+			alarm := AlarmInfo{
+				AlarmType: BlockHeight,
+				Detail:    fmt.Sprintf("Block %v doesnot increased, take time: %v seconds.", height, elapse),
+				Time:      time.Now(),
+			}
+			cli.timerTicker.Data <- alarm
+
 			continue
 		}
 		lastHeight = height
@@ -48,8 +60,15 @@ func (cli *Client) Monitor() {
 
 		for _, v := range vals {
 			if v.Status != 3 {
-				fmt.Errorf("Validators status !=3  block: %v, send alarm !!!", height)
-				//processAlarm(time.Now().Unix())
+				cli.Logger.Debug(fmt.Sprintf("Validators status !=3  block: %v", height))
+
+				alarm := AlarmInfo{
+					AlarmType: Validator,
+					Detail:    fmt.Sprintf("ValSts %v blk %v", v.Status, height),
+					Time:      time.Now(),
+				}
+				cli.timerTicker.Data <- alarm
+
 			}
 		}
 		apiErrTry = 0

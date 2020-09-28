@@ -6,7 +6,10 @@ import (
 
 func TestValidators(t *testing.T) {
 
-	cli := NewClient("tcp://192.168.3.200:26657")
+	cli, err := NewClient("tcp://192.168.3.200:26657")
+	if err != nil {
+		t.Error(err)
+	}
 
 	vals, err := cli.GetValidators()
 
@@ -22,7 +25,10 @@ func TestValidators(t *testing.T) {
 
 func TestLatestBlockHeight(t *testing.T) {
 
-	cli := NewClient("tcp://192.168.3.200:26657")
+	cli, err := NewClient("tcp://192.168.3.200:26657")
+	if err != nil {
+		t.Error(err)
+	}
 
 	height, err := cli.LatestBlockHeight()
 

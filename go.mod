@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Robbin-Liu/go-binance-sdk v0.0.0-20200728021042-9ef0842abec7
+	github.com/aliyun/alibaba-cloud-sdk-go v1.61.535
 	github.com/cosmos/cosmos-sdk v0.39.1
 	github.com/cosmos/ethermint v0.0.0-00010101000000-000000000000
 	github.com/go-resty/resty/v2 v2.3.0

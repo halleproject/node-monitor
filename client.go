@@ -1,24 +1,42 @@
 package main
 
 import (
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ethermint/app"
 	"github.com/cosmos/ethermint/codec"
+	"github.com/tendermint/tendermint/libs/log"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 type Client struct {
-	cliCtx context.CLIContext
+	cliCtx      context.CLIContext
+	timerTicker *TimerTicker
+	Logger      log.Logger
+	Moniker     string
 }
 
-func NewClient(nodeRpc string) *Client {
+func NewClient(nodeRpc string) (*Client, error) {
 	//cliCtx := context.NewCLIContext().WithNodeURI("tcp://192.168.3.200:26657")
+
 	cli := Client{
 		cliCtx: context.NewCLIContext().WithNodeURI(nodeRpc),
+		Logger: log.NewTMLogger(os.Stdout),
 	}
 
-	return &cli
+	status, err := getNodeStatus(cli.cliCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	cli.Moniker = status.NodeInfo.Moniker
+	cli.timerTicker = NewTimerticker(&cli)
+
+	cli.timerTicker.OnStart()
+
+	return &cli, nil
 }
 
 // LatestBlockHeight returns the latest block height on the active chain
