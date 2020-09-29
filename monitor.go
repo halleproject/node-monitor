@@ -45,6 +45,7 @@ func (cli *Client) Monitor() {
 				Time:      time.Now(),
 			}
 			cli.timerTicker.Data <- alarm
+			time.Sleep(5 * time.Second)
 
 			continue
 		}

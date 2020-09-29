@@ -53,7 +53,7 @@ type TimerTicker struct {
 func NewTimerticker(cli *Client) *TimerTicker {
 	tt := &TimerTicker{
 		Cli:    cli,
-		ticker: time.NewTicker(time.Second),
+		ticker: time.NewTicker(10 * time.Second),
 		Data:   make(chan AlarmInfo, tickTockBufferSize),
 		Logger: log.NewTMLogger(os.Stdout),
 	}
@@ -67,7 +67,7 @@ func (t *TimerTicker) OnStart() error {
 }
 
 // stop the timer and drain if necessary
-func (t *TimerTicker) stopTimer() {
+func (t *TimerTicker) stopTicker() {
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
@@ -87,8 +87,12 @@ func (t *TimerTicker) timeoutRoutine() {
 			l := len(t.Data)
 
 			if l == 0 {
-				count = 0
-				t.ticker = time.NewTicker(time.Second)
+				//count = 0
+				if count != 0 {
+					t.ticker = time.NewTicker(10 * time.Second)
+					count = 0
+				}
+
 				continue
 			}
 
